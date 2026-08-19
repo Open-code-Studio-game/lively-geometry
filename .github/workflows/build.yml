@@ -1,0 +1,39 @@
+name: Build StandaloneOSX
+
+# 触发：推送到 main 时自动构建，也可手动在 Actions 页面点 Run workflow
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # macOS runner 跑的是稳定版 macOS（非你本机的 macOS 27 开发者 beta），
+    # 因此 Unity 捆绑的 .NET 运行时能正常初始化 CoreCLR，构建不会挂。
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Build Unity project (StandaloneOSX)
+        uses: game-ci/unity-builder@v4
+        env:
+          # Personal 版：用 Unity 账号邮箱+密码在线激活，无需 .ulf 文件
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: StandaloneOSX
+          unityVersion: 6000.5.8f1
+          buildsPath: build
+          versioning: Semantic
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StandaloneOSX
+          path: build/StandaloneOSX
+          retention-days: 14
