@@ -1,4 +1,4 @@
-name: Build StandaloneOSX
+name: Build (Windows / Linux / macOS)
 
 # 触发：推送到 main 时自动构建，也可手动在 Actions 页面点 Run workflow
 on:
@@ -6,12 +6,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# 三个平台并行构建
 jobs:
-  build:
-    # macOS runner 跑的是稳定版 macOS（非你本机的 macOS 27 开发者 beta），
-    # 因此 Unity 捆绑的 .NET 运行时能正常初始化 CoreCLR，构建不会挂。
+  # ---- macOS：本机 macOS 27 跑不了 Unity，但 GitHub macOS runner 是稳定版，可正常出包 ----
+  build-osx:
     runs-on: macos-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,10 +18,16 @@ jobs:
           lfs: true
           fetch-depth: 0
 
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-OSX-${{ hashFiles('Assets/**', 'Packages/manifest.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-OSX-
+
       - name: Build Unity project (StandaloneOSX)
         uses: game-ci/unity-builder@v4
         env:
-          # Personal 版：用 Unity 账号邮箱+密码在线激活，无需 .ulf 文件
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
@@ -36,4 +41,74 @@ jobs:
         with:
           name: StandaloneOSX
           path: build/StandaloneOSX
+          retention-days: 14
+
+  # ---- Linux：跑 StandaloneLinux64（按 1 倍分钟计费，最省） ----
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Linux-${{ hashFiles('Assets/**', 'Packages/manifest.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-Linux-
+
+      - name: Build Unity project (StandaloneLinux64)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: StandaloneLinux64
+          unityVersion: 6000.5.8f1
+          buildsPath: build
+          versioning: None
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StandaloneLinux64
+          path: build/StandaloneLinux64
+          retention-days: 14
+
+  # ---- Windows：跑 StandaloneWindows64 ----
+  build-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Win-${{ hashFiles('Assets/**', 'Packages/manifest.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-Win-
+
+      - name: Build Unity project (StandaloneWindows64)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: StandaloneWindows64
+          unityVersion: 6000.5.8f1
+          buildsPath: build
+          versioning: None
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StandaloneWindows64
+          path: build/StandaloneWindows64
           retention-days: 14
