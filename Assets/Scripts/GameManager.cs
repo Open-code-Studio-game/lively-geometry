@@ -106,7 +106,7 @@ namespace LivelyGeometry
             RenderSettings.ambientGroundColor  = new Color(0.30f, 0.25f, 0.20f);
             RenderSettings.fog = true;
             RenderSettings.fogColor = Palette.FogColor;
-            RenderSettings.fogMode = UnityEngine.Rendering.FogMode.Linear;
+            RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogStartDistance = 8f;
             RenderSettings.fogEndDistance = 26f;
         }
