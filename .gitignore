@@ -75,6 +75,12 @@ ExportedObj/
 # Unity3D generated file on crash reports
 sysinfo.txt
 
+# OS / editor junk
+.DS_Store
+
+# Agent working memory (local only, not project source)
+.codebuddy/
+
 # Mono auto generated files
 mono_crash.*
 
